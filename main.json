@@ -3,7 +3,7 @@
   "iconUrl": "https://streamingcommunityz.institute/favicon.ico",
   "author": {
     "name": "sobet",
-    "icon": "https://avatars.githubusercontent.com/u/Karelg86"
+    "icon": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQPQ1qIiALbM3xDWGsuJzu6ItaQGwb9ICRRw&s"
   },
   "version": "1.0.0",
   "language": "Italian",
@@ -12,6 +12,9 @@
   "baseUrl": "https://streamingcommunityz.institute/",
   "searchBaseUrl": "https://streamingcommunityz.institute/search?q=%s",
   "scriptUrl": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
+  "type": "movie,tv",
   "asyncJS": true,
-  "streamAsyncJS": false
+  "supportsMojuru": true,
+  "supportsSora": true,
+  "supportsLuna": true
 }
