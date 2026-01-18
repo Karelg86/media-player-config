@@ -6,7 +6,7 @@
   "type": "shows/movies",
   "baseURL": "https://streamingcommunityz.institute",
   "searchURL": "https://streamingcommunityz.institute/search?q=%s",
-  "scriptURL": "https://raw.githubusercontent.com/TUOUSERNAME/media-player-config/main/extractor.js",
+  "scriptURL": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
   "quality": "1080p",
   "streamType": "HLS"
 }
