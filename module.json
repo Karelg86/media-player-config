@@ -1,12 +1,16 @@
 {
+  "id": "streamingcommunity-it",
   "name": "StreamingCommunity IT",
   "author": "sobet",
   "version": "1.0.0",
-  "language": "Italian",
-  "type": "shows/movies",
+  "description": "Modulo per StreamingCommunity italiano",
+  "language": "it",
+  "locale": "Italian",
+  "type": ["movie", "tv"],
   "baseURL": "https://streamingcommunityz.institute",
-  "searchURL": "https://streamingcommunityz.institute/search?q=%s",
+  "searchURL": "https://streamingcommunityz.institute/search?q={query}",
   "scriptURL": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
-  "quality": "1080p",
-  "streamType": "HLS"
+  "icon": "https://streamingcommunityz.institute/favicon.ico",
+  "supportedFormats": ["hls", "mp4"],
+  "quality": "1080p"
 }
