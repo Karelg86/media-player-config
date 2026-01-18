@@ -3,14 +3,14 @@
   "name": "StreamingCommunity IT",
   "author": "sobet",
   "version": "1.0.0",
-  "description": "Modulo per StreamingCommunity italiano",
-  "language": "it",
-  "locale": "Italian",
-  "type": ["movie", "tv"],
-  "baseURL": "https://streamingcommunityz.institute",
-  "searchURL": "https://streamingcommunityz.institute/search?q={query}",
-  "scriptURL": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
-  "icon": "https://streamingcommunityz.institute/favicon.ico",
-  "supportedFormats": ["hls", "mp4"],
-  "quality": "1080p"
+  "source": {
+    "baseURL": "https://streamingcommunityz.institute",
+    "searchPath": "/search?q=%s"
+  },
+  "script": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
+  "metadata": {
+    "language": "it",
+    "type": "anime,movie,tv",
+    "icon": "https://streamingcommunityz.institute/favicon.ico"
+  }
 }
