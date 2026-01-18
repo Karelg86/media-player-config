@@ -1,16 +1,17 @@
 {
-  "id": "streamingcommunity-it",
-  "name": "StreamingCommunity IT",
-  "author": "sobet",
-  "version": "1.0.0",
-  "source": {
-    "baseURL": "https://streamingcommunityz.institute",
-    "searchPath": "/search?q=%s"
+  "sourceName": "StreamingCommunity IT",
+  "iconUrl": "https://streamingcommunityz.institute/favicon.ico",
+  "author": {
+    "name": "sobet",
+    "icon": "https://avatars.githubusercontent.com/u/Karelg86"
   },
-  "script": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
-  "metadata": {
-    "language": "it",
-    "type": "anime,movie,tv",
-    "icon": "https://streamingcommunityz.institute/favicon.ico"
-  }
+  "version": "1.0.0",
+  "language": "Italian",
+  "streamType": "HLS",
+  "quality": "1080p",
+  "baseUrl": "https://streamingcommunityz.institute/",
+  "searchBaseUrl": "https://streamingcommunityz.institute/search?q=%s",
+  "scriptUrl": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
+  "asyncJS": true,
+  "streamAsyncJS": false
 }
