@@ -1,6 +1,6 @@
 async function searchResults(keyword) {
   const response = await soraFetch(
-    `https://streamingcommunityz.institute/it/archive?search=${keyword}`
+    `https://streamingcommunityz.investments/it/archive?search=${keyword}`
   );
   const html = await response.text();
 
@@ -21,11 +21,11 @@ async function searchResults(keyword) {
         const posterImage = item.images?.find((img) => img.type === "poster");
         return {
           title:
-            item.name?.replaceAll("amp;", "").replaceAll("&#39;", "'") || "",
+            item.name?.replaceAll("amp;", "").replaceAll("'", "'") || "",
           image: posterImage?.filename
-            ? `https://cdn.streamingcommunityz.institute/images/${posterImage.filename}`
+            ? `https://cdn.streamingcommunityz.investments/images/${posterImage.filename}`
             : "",
-          href: `https://streamingcommunityz.institute/it/titles/${item.id}-${item.slug}`,
+          href: `https://streamingcommunityz.investments/it/titles/${item.id}-${item.slug}`,
         };
       })
       .filter((item) => item.image) || [];
@@ -55,12 +55,12 @@ async function extractDetails(url) {
   return JSON.stringify([
     {
       description:
-        titleData.plot?.replaceAll("amp;", "").replaceAll("&#39;", "'") ||
+        titleData.plot?.replaceAll("amp;", "").replaceAll("'", "'") ||
         "N/A",
       aliases:
         titleData.original_name
           ?.replaceAll("amp;", "")
-          .replaceAll("&#39;", "'") || "N/A",
+          .replaceAll("'", "'") || "N/A",
       airdate: titleData.release_date || "N/A",
     },
   ]);
@@ -103,7 +103,7 @@ async function extractEpisodes(url) {
             hasEpisodes = true;
             seasonEpisodes.forEach((episode) => {
               episodes.push({
-                href: `https://streamingcommunityz.institute/it/iframe/${titleId}?episode_id=${episode.id}`,
+                href: `https://streamingcommunityz.investments/it/iframe/${titleId}?episode_id=${episode.id}`,
                 number: episode.number || episodes.length + 1,
               });
             });
@@ -116,7 +116,7 @@ async function extractEpisodes(url) {
 
     if (!hasEpisodes) {
       episodes.push({
-        href: `https://streamingcommunityz.institute/it/iframe/${titleId}`,
+        href: `https://streamingcommunityz.investments/it/iframe/${titleId}`,
         number: 1,
       });
     }
