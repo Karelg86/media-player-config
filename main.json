@@ -1,6 +1,6 @@
 {
   "sourceName": "StreamingCommunity IT",
-  "iconUrl": "https://streamingcommunityz.institute/favicon.ico",
+  "iconUrl": "https://streamingcommunityz.kitchen/favicon.ico",
   "author": {
     "name": "sobet",
     "icon": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQPQ1qIiALbM3xDWGsuJzu6ItaQGwb9ICRRw&s"
@@ -9,8 +9,8 @@
   "language": "Italian",
   "streamType": "HLS",
   "quality": "1080p",
-  "baseUrl": "https://streamingcommunityz.investments/it/",
-  "searchBaseUrl": "https://streamingcommunityz.investments/it/archive?title=%s",
+  "baseUrl": "https://streamingcommunityz.kitchen/it/",
+  "searchBaseUrl": "https://streamingcommunityz.kitchen/it/archive?title=%s",
   "scriptUrl": "https://raw.githubusercontent.com/Karelg86/media-player-config/main/extractor.js",
   "type": "movie,tv",
   "asyncJS": true,
