@@ -1,6 +1,6 @@
 async function searchResults(keyword) {
   const response = await soraFetch(
-    `https://streamingcommunityz.land/it/archive?search=${keyword}`
+    `https://streamingcommunityz.markets/it/archive?search=${keyword}`
   );
   const html = await response.text();
 
@@ -23,9 +23,9 @@ async function searchResults(keyword) {
           title:
             item.name?.replaceAll("amp;", "").replaceAll("&#39;", "'") || "",
           image: posterImage?.filename
-            ? `https://cdn.streamingcommunityz.land/images/${posterImage.filename}`
+            ? `https://cdn.streamingcommunityz.markets/images/${posterImage.filename}`
             : "",
-          href: `https://streamingcommunityz.land/it/titles/${item.id}-${item.slug}`,
+          href: `https://streamingcommunityz.markets/it/titles/${item.id}-${item.slug}`,
         };
       })
       .filter((item) => item.image) || [];
@@ -103,7 +103,7 @@ async function extractEpisodes(url) {
             hasEpisodes = true;
             seasonEpisodes.forEach((episode) => {
               episodes.push({
-                href: `https://streamingcommunityz.land/it/iframe/${titleId}?episode_id=${episode.id}`,
+                href: `https://streamingcommunityz.markets/it/iframe/${titleId}?episode_id=${episode.id}`,
                 number: episode.number || episodes.length + 1,
               });
             });
@@ -116,7 +116,7 @@ async function extractEpisodes(url) {
 
     if (!hasEpisodes) {
       episodes.push({
-        href: `https://streamingcommunityz.land/it/iframe/${titleId}`,
+        href: `https://streamingcommunityz.markets/it/iframe/${titleId}`,
         number: 1,
       });
     }
