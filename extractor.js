@@ -1,6 +1,6 @@
 async function searchResults(keyword) {
   const response = await soraFetch(
-    `https://streamingcommunityz.money/it/archive?search=${keyword}`
+    `https://streamingcommunityz.motorcycles/it/archive?search=${keyword}`
   );
   const html = await response.text();
 
@@ -23,9 +23,9 @@ async function searchResults(keyword) {
           title:
             item.name?.replaceAll("amp;", "").replaceAll("&#39;", "'") || "",
           image: posterImage?.filename
-            ? `https://cdn.streamingcommunityz.money/images/${posterImage.filename}`
+            ? `https://cdn.streamingcommunityz.motorcycles/images/${posterImage.filename}`
             : "",
-          href: `https://streamingcommunityz.money/it/titles/${item.id}-${item.slug}`,
+          href: `https://streamingcommunityz.motorcycles/it/titles/${item.id}-${item.slug}`,
         };
       })
       .filter((item) => item.image) || [];
@@ -103,7 +103,7 @@ async function extractEpisodes(url) {
             hasEpisodes = true;
             seasonEpisodes.forEach((episode) => {
               episodes.push({
-                href: `https://streamingcommunityz.money/it/iframe/${titleId}?episode_id=${episode.id}`,
+                href: `https://streamingcommunityz.motorcycles/it/iframe/${titleId}?episode_id=${episode.id}`,
                 number: episode.number || episodes.length + 1,
               });
             });
@@ -116,7 +116,7 @@ async function extractEpisodes(url) {
 
     if (!hasEpisodes) {
       episodes.push({
-        href: `https://streamingcommunityz.money/it/iframe/${titleId}`,
+        href: `https://streamingcommunityz.motorcycles/it/iframe/${titleId}`,
         number: 1,
       });
     }
