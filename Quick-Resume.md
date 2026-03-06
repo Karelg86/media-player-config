@@ -17,11 +17,18 @@ Quando l'utente comunica che il dominio è cambiato e fornisce quello nuovo (es.
 3. **Verificare sostituzioni**:
    - Assicurarsi che `https://cdn.IL_NUOVO_DOMINIO/...` e `https://IL_NUOVO_DOMINIO/...` formino pattern URL validi dopo l'edit.
 
-4. **Avvisare l'utente**:
-   - Confermare all'utente che i file locali della directory `Stream_Git` sono stati aggiornati.
-   - Ricordare all'utente di effettuare l'eventuale `git commit e push` sul suo repository (`media-player-config`).
-   - Ricordare all'utente di chiudere l'app SORA completamente (o ricaricare il modulo) affinché acquisisca il file aggiornato dal web raw link qualora sia stato spinto su Github.
+4. **Push su GitHub (Automatico)**:
+   - Eseguire i seguenti comandi nel terminale all'interno della cartella `Stream_Git` per pubblicare le modifiche online:
+     ```bash
+     git add .
+     git commit -m "Aggiornato dominio a IL_NUOVO_DOMINIO"
+     git push
+     ```
+
+5. **Avvisare l'utente**:
+   - Confermare all'utente che i file sono stati aggiornati e pushati con successo su GitHub.
+   - Ricordare all'utente di chiudere l'app SORA completamente (o ricaricare il modulo) affinché acquisisca il file aggiornato dal cloud.
 
 ---
-**Dominio corrente configurato nei file:** `streamingcommunityz.gdn`
+**Dominio corrente configurato nei file:** `streamingcommunityz.computer`
 *(Mantenere quest'ultima riga aggiornata a ogni sostituzione così da avere facilmente identificabile il "dominio precedente")*
