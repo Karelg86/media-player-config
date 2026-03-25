@@ -30,5 +30,5 @@ Quando l'utente comunica che il dominio è cambiato e fornisce quello nuovo (es.
    - Ricordare all'utente di chiudere l'app SORA completamente (o ricaricare il modulo) affinché acquisisca il file aggiornato dal cloud.
 
 ---
-**Dominio corrente configurato nei file:** `streamingcommunityz.nl`
+**Dominio corrente configurato nei file:** `streamingcommunityz.ninja`
 *(Mantenere quest'ultima riga aggiornata a ogni sostituzione così da avere facilmente identificabile il "dominio precedente")*
