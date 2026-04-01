@@ -1,6 +1,6 @@
 async function searchResults(keyword) {
     const response = await soraFetch(
-        `https://streamingcommunityz.parts/it/archive?search=${keyword}`
+        `https://streamingcommunityz.page/it/archive?search=${keyword}`
     );
     const html = await response.text();
     const regex = /<div[^>]*id="app"[^>]*data-page="([^"]*)"/;
@@ -13,8 +13,8 @@ async function searchResults(keyword) {
         const posterImage = item.images?.find((img) => img.type === "poster");
         return {
             title: item.name?.replaceAll("amp;", "").replaceAll("&#39;", "'") || "",
-            image: posterImage?.filename ? `https://cdn.streamingcommunityz.parts/images/${posterImage.filename}` : "",
-            href: `https://streamingcommunityz.parts/it/titles/${item.id}-${item.slug}`,
+            image: posterImage?.filename ? `https://cdn.streamingcommunityz.page/images/${posterImage.filename}` : "",
+            href: `https://streamingcommunityz.page/it/titles/${item.id}-${item.slug}`,
         };
     }).filter((item) => item.image) || [];
     return JSON.stringify(results);
@@ -64,7 +64,7 @@ async function extractEpisodes(url) {
                         hasEpisodes = true;
                         seasonEpisodes.forEach((episode) => {
                             episodes.push({
-                                href: `https://streamingcommunityz.parts/it/iframe/${titleId}?episode_id=${episode.id}`,
+                                href: `https://streamingcommunityz.page/it/iframe/${titleId}?episode_id=${episode.id}`,
                                 number: episode.number || episodes.length + 1,
                             });
                         });
@@ -75,7 +75,7 @@ async function extractEpisodes(url) {
             }
         }
         if (!hasEpisodes) {
-            episodes.push({ href: `https://streamingcommunityz.parts/it/iframe/${titleId}`, number: 1 });
+            episodes.push({ href: `https://streamingcommunityz.page/it/iframe/${titleId}`, number: 1 });
         }
         return JSON.stringify(episodes);
     } catch (error) {
