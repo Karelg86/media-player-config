@@ -105,9 +105,10 @@ async function extractStreamUrl(url) {
                 const base = urlMatch[1];
                 const token = tokenMatch[1];
                 const expires = expiresMatch[1];
+                const fhd = /window\.canPlayFHD\s*=\s*true/.test(html2) ? "&h=1" : "";
                 finalUrl = base.includes("?b=1")
-                    ? `${base}&token=${token}&expires=${expires}&h=1`
-                    : `${base}?token=${token}&expires=${expires}&h=1`;
+                    ? `${base}&token=${token}&expires=${expires}${fhd}`
+                    : `${base}?token=${token}&expires=${expires}${fhd}`;
             }
         }
         if (!finalUrl) {
