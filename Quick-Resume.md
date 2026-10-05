@@ -43,5 +43,5 @@ Quando l'utente comunica che il dominio è cambiato e fornisce quello nuovo (es.
 - **Prima di dare la colpa a DNS/VPN/operatore:** testare la catena con Node (iframe → embed → playlist) e controllare lo status HTTP della playlist. Se è 403, il problema è nei parametri dell'URL, non nella rete.
 
 ---
-**Dominio corrente configurato nei file:** `streamingcommunityz.photography`
+**Dominio corrente configurato nei file:** `streamingcommunityz.promo`
 *(Mantenere quest'ultima riga aggiornata a ogni sostituzione così da avere facilmente identificabile il "dominio precedente")*
