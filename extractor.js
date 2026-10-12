@@ -1,16 +1,16 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.4
+ * Versione: 1.0.5
  * 
  * Basato sul codice originale funzionante con:
- * - Dominio aggiornato (.rip) e CDN immagini centralizzati
+ * - Dominio aggiornato (.shiksha) e CDN immagini centralizzati
  * - Estrazione stagioni in ordine naturale (compatibile con detectSeasons di Shirox)
  * - extractStreamUrl restituisce direttamente la stringa dell'URL Master Playlist (compatibile con JSEngine.swift)
  */
 
 const CONFIG = {
-  BASE: "https://streamingcommunityz.rip",
-  CDN: "https://cdn.streamingcommunityz.rip/images/",
+  BASE: "https://streamingcommunityz.shiksha",
+  CDN: "https://cdn.streamingcommunityz.shiksha/images/",
   LANG: "it",
 };
 
