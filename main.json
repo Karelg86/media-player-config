@@ -2,10 +2,10 @@
   "sourceName": "StreamingCommunity IT",
   "iconUrl": "https://streamingcommunityz.shiksha/favicon.ico",
   "author": {
-    "name": "sobet",
-    "icon": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQPQ1qIiALbM3xDWGsuJzu6ItaQGwb9ICRRw&s"
+    "name": "Karelg86",
+    "icon": "https://github.com/Karelg86.png"
   },
-  "version": "1.0.5",
+  "version": "1.0.6",
   "language": "Italian",
   "streamType": "HLS",
   "quality": "1080p",

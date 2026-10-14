@@ -1,8 +1,8 @@
 # QUICK-RESUME: Modulo Shirox / Sora — StreamingCommunity IT
 
-> **Documento di ripristino contesto e guida operativa per Google Antigravity (PC Casa)**  
-> **Versione modulo:** 1.0.5  
-> **Ultimo aggiornamento:** 12 Ottobre 2026  
+> **Documento di ripristino contesto e guida operativa**  
+> **Versione modulo:** 1.0.6  
+> **Ultimo aggiornamento:** 14 Ottobre 2026  
 > **Target:** iOS Media Player **Shirox v1.0.6 (Build 117)** (compatibile anche con Sora / Luna / Mojuru)  
 > **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)  
 > **Percorso locale PC Casa:** `d:\Sora_Sulfur\Stream_Git\` (o cartella clone del repo)
@@ -12,9 +12,10 @@
 ## 1. QUADRO GENERALE & DIAGNOSI DEI PROBLEMI
 
 ### A. Dominio Attivo e CDN
-- I vecchi domini `.promo` e `.rip` sono dismessi (HTTP 301 Moved Permanently).
+- I vecchi domini `.promo` e `.rip` sono dismessi (il `.rip` ormai non risponde più, nemmeno con redirect).
 - **Nuovo dominio attivo:** `https://streamingcommunityz.shiksha`
 - **CDN locandine attivo:** `https://cdn.streamingcommunityz.shiksha/images/`
+- Il controllo del dominio è automatico: vedi sezione 3.
 
 ---
 
@@ -65,91 +66,105 @@ Lo stallo della riproduzione video in Shirox era causato da 3 fattori tecnici co
 - **Fix v1.0.3:**
   1. Rimosso l'ordinamento numerico: la lista degli episodi mantiene l'**ordine naturale per stagione**:
      `[S1E1..S1E7, S2E1..S2E13, S3E1..S3E13, ...]`
-  2. Caricamento sequenziale robusto (S1 già presente dal primo fetch, poi S2, S3...) per evitare race-condition nel runtime WebKit di Shirox.
-  3. Shirox ora riconosce esattamente le stagioni reali (es. 5 stagioni per Breaking Bad, ciascuna con tutti i suoi episodi corretti).
+  2. Shirox ora riconosce esattamente le stagioni reali (es. 5 stagioni per Breaking Bad, ciascuna con tutti i suoi episodi corretti).
+- **Aggiornamento v1.0.6:** le stagioni non si scaricano più una alla volta ma a gruppi (vedi sezione 1.F). L'ordine finale resta identico.
 
 ---
 
 ### E. Compatibilità JavaScriptCore (iOS)
 - Nei micro-contesti di `JSEngine.swift` l'oggetto globale `URL` potrebbe non essere definito o avere comportamenti anomali.
-- Tutte le funzioni usano `absUrl()` e `withParams()` basate su regex e string manipulation sicura.
+- Per questo `extractor.js` non usa `URL`: `withParams()` e `decodeEntities()` lavorano solo con regex e stringhe.
 - Le chiamate fetch supportano sia `soraFetch` standard che `fetchv2` (con bypass Cloudflare impersonate integrato in Shirox).
+
+---
+
+### F. Novità v1.0.6 (14 Ottobre 2026)
+1. **Cache 15 secondi su `season-1`:** `extractDetails` ed `extractEpisodes` chiedono la stessa pagina. Ora viene scaricata una sola volta. La cache salva la richiesta *in corso*, quindi funziona anche se Shirox chiama le due funzioni nello stesso istante.
+2. **Stagioni a gruppi (`SEASON_CONCURRENCY = 3`):** S2..Sn scaricate massimo 3 alla volta, risultati sempre nell'ordine [S2, S3, ...]. Compromesso tra velocità e rischio di blocco Cloudflare.
+   - ⚙️ **Se Shirox dà problemi** (stagioni mancanti, errori su serie lunghe): in `extractor.js` mettere `SEASON_CONCURRENCY = 2`, oppure `1` per tornare al comportamento sequenziale della v1.0.5.
+   - Test 14/10/2026: Breaking Bad (5 stagioni, 62 episodi) caricata in ~0,4 s, stagioni riconosciute correttamente [7, 13, 13, 13, 16].
+3. **Isolamento `window.masterPlaylist`:** `url`, `token` ed `expires` vengono cercati solo da `window.masterPlaylist` fino alla fine del suo `<script>`, così uno script esterno nella pagina non può "rubare" il link.
+   - ⚠️ Vixcloud **non** chiude il blocco con `};` (verificato 14/10/2026), quindi non usare regex basate sulle graffe.
+4. **Apostrofi:** `decodeEntities` riconosce `&#39;`, `&#039;`, `&#x27;`, `&apos;` (titoli tipo "L'esorcista" ora corretti).
+5. **Iframe:** `src` accettato con apici singoli o doppi.
+6. **Icona autore:** ora `https://github.com/Karelg86.png` (stabile).
+
+---
+
+### G. Regole da NON toccare
+1. Prima di `JSON.parse` sull'attributo `data-page` si sostituisce **solo** `&quot;`. `decodeEntities()` va applicato **dopo**, sui singoli campi (`name`, `plot`, `original_name`).
+2. Usare sempre l'endpoint `${baseUrl}/season-1` (restituisce sia `props.title` che `props.loadedSeason`).
+3. **Mai** ordinare gli episodi per `number` (vedi sezione 1.D).
 
 ---
 
 ## 2. STRUTTURA DEI FILE NEL PROGETTO
 
-La cartella del repository GitHub (`media-player-config`) deve contenere:
-
 ```
 media-player-config/
-├── main.json           # Metadati modulo, icona, versione e URL GitHub raw
-├── extractor.js        # Script JS eseguito da JavaScriptCore su Shirox
-├── test-module.js      # Test runner locale (Node.js 18+) per testare senza push
-├── Quick-Resume.md     # Questa guida tecnica
-└── .gitignore          # Ignora file di test o temporanei
+├── main.json                       # Metadati modulo, icona, versione e URL GitHub raw
+├── extractor.js                    # Script JS eseguito da JavaScriptCore su Shirox
+├── test-module.js                  # Test runner locale (Node.js 18+) per testare senza push
+├── Quick-Resume.md                 # Questa guida tecnica
+├── .gitignore                      # Esclude backup/ e report locali dal repo
+├── .github/
+│   ├── workflows/
+│   │   ├── check-domain.yml        # Robot: controlla il dominio ogni 6 ore e AVVISA (issue)
+│   │   └── update-domain.yml       # Robot: cambio dominio su richiesta (anche da cellulare)
+│   └── scripts/
+│       ├── check-domain.js         # Logica del controllo
+│       └── update-domain.js        # Logica della sostituzione dominio + versione
+└── backup/                         # SOLO sul PC (ignorato da git): versioni precedenti
 ```
 
 ---
 
-## 3. PROCEDURA RAPIDA: CAMBIO DOMINIO IN 2 STEP
+## 3. CAMBIO DOMINIO
 
-Quando StreamingCommunity cambia dominio (es. da `.rip` a `.new`):
+### 🤖 Come funziona l'avviso automatico
+- Ogni 6 ore GitHub esegue **Controllo dominio**. Non modifica nulla.
+- Se il dominio reindirizza altrove **o non risponde più**, apre una **issue** con etichetta `dominio`, assegnata a te → arriva notifica sull'app GitHub / email.
+- Se una issue di avviso è già aperta non ne apre altre.
+- Lo puoi lanciare a mano: *Actions → Controllo dominio → Run workflow*.
+- ⚠️ GitHub sospende i workflow programmati dopo **60 giorni senza attività** nel repo (manda una email prima). Per riattivarlo: *Actions → Controllo dominio → Enable workflow*.
 
-### ⚡ STEP 1: Modifica le 2 righe di configurazione
+### 📱 Cambio dominio da cellulare (metodo consigliato)
+1. Apri il link scritto nella issue, oppure dal browser: `https://github.com/Karelg86/media-player-config/actions/workflows/update-domain.yml`  
+   (dall'app GitHub: repo → **Actions** → **Aggiorna dominio**)
+2. Premi **Run workflow**.
+3. Scrivi il nuovo dominio **senza** `https://` (es. `streamingcommunityz.nuovo`) e conferma.
+4. Il robot: sostituisce il dominio in `main.json`, `extractor.js`, `Quick-Resume.md` (CDN compreso), incrementa la versione (es. 1.0.6 → 1.0.7), lancia i test, fa commit e push e chiude la issue.
+5. Su Shirox: Moduli → aggiorna.
 
-1. Apri `extractor.js` e modifica **solo la riga 12**:
-   ```javascript
-   const CONFIG = {
-     BASE: "https://streamingcommunityz.shiksha", // <-- Nuovo dominio qui
-     CDN: "https://cdn.streamingcommunityz.shiksha/images/",
-     LANG: "it",
-   };
-   ```
+> Se i test del robot risultano falliti, non è per forza un errore: Cloudflare a volte blocca i server di GitHub. Prova il modulo su Shirox o lancia il test dal PC.
 
-2. Apri `main.json` e aggiorna dominio e versione:
-   ```json
-   {
-     "version": "1.0.5",
-     "iconUrl": "https://streamingcommunityz.shiksha/favicon.ico",
-     "baseUrl": "https://streamingcommunityz.shiksha/it/",
-     "searchBaseUrl": "https://streamingcommunityz.shiksha/it/archive?search=%s",
-     ...
-   }
-   ```
-   > ⚠️ **IMPORTANTE SULLA VERSIONE:** Shirox salva in cache `scriptContent`. Incrementare `version` (es. da `1.0.4` a `1.0.5`) è **obbligatorio** affinché Shirox scarichi la nuova versione dello script da GitHub senza dover disinstallare il modulo nell'app!
-
----
-
-### ⚡ STEP 2: Test Locale e Push su Git
-
-Prima di fare il push, verifica che tutto funzioni lanciando il test in locale:
-
+### 💻 Cambio dominio da PC
+Stesso risultato, in locale:
 ```bash
+node .github/scripts/update-domain.js streamingcommunityz.nuovo
 node test-module.js "interstellar"
-```
-
-Se vedi i 4 step con segno verde (`search`, `details`, `episodes`, `stream`), esegui il commit e push su GitHub:
-
-#### In PowerShell (Windows):
-```powershell
-cd "d:\Sora_Sulfur\Stream_Git"
+node test-module.js "breaking bad"
 git add main.json extractor.js Quick-Resume.md
-git commit -m "Update domain to streamingcommunityz.shiksha - v1.0.5"
+git commit -m "Update domain to streamingcommunityz.nuovo - v1.0.7"
 git push origin main
 ```
 
-#### In Git Bash:
-```bash
-cd /d/Sora_Sulfur/Stream_Git
-git add main.json extractor.js Quick-Resume.md
-git commit -m "Update domain to streamingcommunityz.shiksha - v1.0.5"
-git push origin main
-```
+> ⚠️ **IMPORTANTE SULLA VERSIONE:** Shirox salva in cache `scriptContent`. Incrementare `version` in `main.json` è **obbligatorio** affinché Shirox scarichi la nuova versione dello script senza dover disinstallare il modulo. Lo script `update-domain.js` lo fa da solo; se modifichi i file a mano, ricordatelo.
 
 ---
 
-## 4. COME TESTARE SU SHIROX DOPO IL PUSH
+## 4. TEST LOCALE
+
+```bash
+node test-module.js --mock            # offline: verifica apostrofi, cache, ordine stagioni, max 3 in parallelo, estrazione stream
+node test-module.js "interstellar"    # live: film
+node test-module.js "breaking bad"    # live: serie TV (mostra anche come Shirox vedrà le stagioni)
+```
+Tutte le righe devono avere ✅. Per testare una versione vecchia: `EXTRACTOR=backup/v1.0.5/extractor.js node test-module.js --mock`.
+
+---
+
+## 5. COME TESTARE SU SHIROX DOPO IL PUSH
 
 1. Assicurati che il push su GitHub sia completato.
 2. Su iPhone/iPad, apri **Shirox**:
@@ -158,4 +173,4 @@ git push origin main
    - In alternativa, fai uno swipe verso il basso per ricaricare la lista o reinstalla il modulo dal link raw del tuo repository:
      `https://raw.githubusercontent.com/Karelg86/media-player-config/main/main.json`
 3. Cerca un film o una serie (es. "Interstellar" o "Breaking Bad") e avvia la riproduzione.
-4. Verifica che il lettore carichi fluidamente senza stalli di buffering.
+4. Verifica che il lettore carichi fluidamente senza stalli di buffering e che le stagioni siano corrette.

@@ -1,11 +1,13 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.5
- * 
- * Basato sul codice originale funzionante con:
- * - Dominio aggiornato (.shiksha) e CDN immagini centralizzati
- * - Estrazione stagioni in ordine naturale (compatibile con detectSeasons di Shirox)
- * - extractStreamUrl restituisce direttamente la stringa dell'URL Master Playlist (compatibile con JSEngine.swift)
+ * Versione: 1.0.6
+ *
+ * Novità v1.0.6:
+ * - Cache in RAM (TTL 15s) condivisa tra extractDetails ed extractEpisodes:
+ *   viene salvata la richiesta in corso, quindi funziona anche se le due funzioni partono insieme
+ * - Stagioni S2..Sn scaricate a gruppi (max SEASON_CONCURRENCY in parallelo) con ordine naturale garantito
+ * - Estrazione token/expires/url isolata nel blocco window.masterPlaylist
+ * - decodeEntities gestisce tutte le forme dell'apostrofo (&#39; &#039; &#x27; &apos;)
  */
 
 const CONFIG = {
@@ -14,11 +16,19 @@ const CONFIG = {
   LANG: "it",
 };
 
+// Quante stagioni scaricare contemporaneamente (1 = sequenziale come v1.0.5).
+// Se Shirox dà problemi o Cloudflare blocca, abbassare a 2 o 1.
+const SEASON_CONCURRENCY = 3;
+
+// Cache leggera per evitare la doppia richiesta di season-1 (Details + Episodes)
+const CACHE_TTL = 15000; // 15 secondi
+let PAGE_CACHE = { url: "", promise: null, timestamp: 0 };
+
 // --- UTILITY ---
 function decodeEntities(str = "") {
   return str
     .replace(/&amp;/g, "&")
-    .replace(/&#39;/g, "'")
+    .replace(/&#0*39;|&#x0*27;|&apos;/gi, "'")
     .replace(/&quot;/g, '"')
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
@@ -36,6 +46,29 @@ function withParams(url, params) {
   return main + sep + qs + (hash ? "#" + hash : "");
 }
 
+// Esegue fn su ogni elemento con al massimo `limit` operazioni in parallelo.
+// I risultati restano nello stesso ordine degli elementi (necessario per detectSeasons).
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length).fill(null);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      try {
+        results[i] = await fn(items[i], i);
+      } catch (error) {
+        results[i] = null; // Ignora eventuale errore sulla singola stagione
+      }
+    }
+  }
+  const workers = [];
+  for (let w = 0; w < Math.min(Math.max(limit, 1), items.length); w++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+  return results;
+}
+
 // --- FETCH ENGINE COMPATIBILE SHIROX / SORA ---
 async function soraFetch(url, options = { headers: {}, method: "GET", body: null }) {
   try {
@@ -49,23 +82,50 @@ async function soraFetch(url, options = { headers: {}, method: "GET", body: null
   }
 }
 
+// Scarica la pagina e restituisce il JSON Inertia.js contenuto in data-page
+async function fetchInertiaPageData(url) {
+  const response = await soraFetch(url);
+  if (!response) return null;
+  const html = await response.text();
+  const match = /<div[^>]*id="app"[^>]*data-page="([^"]*)"/.exec(html);
+  if (!match || !match[1]) return null;
+
+  // Solo &quot; prima del parse: decodeEntities va applicato DOPO, sui singoli campi
+  return JSON.parse(match[1].replace(/&quot;/g, '"'));
+}
+
+// Come fetchInertiaPageData, ma con useCache=true riusa la richiesta (anche se ancora in corso)
+async function getInertiaPageData(url, useCache = false) {
+  if (!useCache) return fetchInertiaPageData(url);
+
+  const now = Date.now();
+  if (PAGE_CACHE.url === url && PAGE_CACHE.promise && now - PAGE_CACHE.timestamp < CACHE_TTL) {
+    return PAGE_CACHE.promise;
+  }
+
+  const promise = fetchInertiaPageData(url).then(
+    (data) => {
+      if (!data && PAGE_CACHE.promise === promise) PAGE_CACHE = { url: "", promise: null, timestamp: 0 };
+      return data;
+    },
+    (error) => {
+      if (PAGE_CACHE.promise === promise) PAGE_CACHE = { url: "", promise: null, timestamp: 0 };
+      throw error;
+    }
+  );
+  PAGE_CACHE = { url, promise, timestamp: now };
+  return promise;
+}
+
 // ==========================================
 // 1. RICERCA
 // ==========================================
 async function searchResults(keyword) {
   try {
-    const response = await soraFetch(
+    const pageData = await getInertiaPageData(
       `${CONFIG.BASE}/${CONFIG.LANG}/archive?search=${encodeURIComponent(keyword)}`
     );
-    if (!response) return JSON.stringify([]);
-    const html = await response.text();
-    const regex = /<div[^>]*id="app"[^>]*data-page="([^"]*)"/;
-    const match = regex.exec(html);
-    if (!match || !match[1]) return JSON.stringify([]);
-
-    const dataPage = match[1].replace(/&quot;/g, '"');
-    const pageData = JSON.parse(dataPage);
-    const titles = pageData.props?.titles || [];
+    const titles = pageData?.props?.titles || [];
 
     const results = titles
       .map((item) => {
@@ -76,7 +136,7 @@ async function searchResults(keyword) {
           href: `${CONFIG.BASE}/${CONFIG.LANG}/titles/${item.id}-${item.slug}`,
         };
       })
-      .filter((item) => item.image && item.title) || [];
+      .filter((item) => item.image && item.title);
 
     return JSON.stringify(results);
   } catch (error) {
@@ -90,16 +150,8 @@ async function searchResults(keyword) {
 async function extractDetails(url) {
   try {
     const baseUrl = url.replace(/\/season-\d+$/, "");
-    const response = await soraFetch(`${baseUrl}/season-1`);
-    if (!response) return JSON.stringify([]);
-    const html = await response.text();
-    const regex = /<div[^>]*id="app"[^>]*data-page="([^"]*)"/;
-    const match = regex.exec(html);
-    if (!match || !match[1]) return JSON.stringify([]);
-
-    const dataPage = match[1].replace(/&quot;/g, '"');
-    const pageData = JSON.parse(dataPage);
-    const titleData = pageData.props?.title;
+    const pageData = await getInertiaPageData(`${baseUrl}/season-1`, true);
+    const titleData = pageData?.props?.title;
     if (!titleData) return JSON.stringify([]);
 
     return JSON.stringify([{
@@ -120,57 +172,42 @@ async function extractEpisodes(url) {
     const episodes = [];
     const baseUrl = url.replace(/\/season-\d+$/, "");
 
-    // Scarica la stagione 1 per ottenere id e numero totale di stagioni
-    const response = await soraFetch(`${baseUrl}/season-1`);
-    if (!response) return JSON.stringify([]);
-    const html = await response.text();
-    const regex = /<div[^>]*id="app"[^>]*data-page="([^"]*)"/;
-    const match = regex.exec(html);
-    if (!match || !match[1]) return JSON.stringify([]);
-
-    const pageData = JSON.parse(match[1].replace(/&quot;/g, '"'));
-    const titleData = pageData.props?.title;
+    // Riusa la richiesta di extractDetails se è appena partita/terminata
+    const pageData = await getInertiaPageData(`${baseUrl}/season-1`, true);
+    const titleData = pageData?.props?.title;
     if (!titleData) return JSON.stringify([]);
 
     const titleId = titleData.id;
     const totalSeasons = titleData.seasons_count || 1;
-
-    // Aggiungi episodi stagione 1
-    const s1Episodes = pageData.props?.loadedSeason?.episodes || [];
     let hasEpisodes = false;
-    if (s1Episodes.length > 0) {
+
+    const pushEpisodes = (epList) => {
+      if (!Array.isArray(epList) || epList.length === 0) return;
       hasEpisodes = true;
-      s1Episodes.forEach((episode) => {
+      epList.forEach((episode) => {
         episodes.push({
           href: `${CONFIG.BASE}/${CONFIG.LANG}/iframe/${titleId}?episode_id=${episode.id}`,
           number: episode.number || episodes.length + 1,
         });
       });
-    }
+    };
 
-    // Scarica le altre stagioni in ordine sequenziale (S2, S3...)
-    for (let season = 2; season <= totalSeasons; season++) {
-      try {
-        const seasonResponse = await soraFetch(`${baseUrl}/season-${season}`);
-        if (seasonResponse) {
-          const seasonHtml = await seasonResponse.text();
-          const seasonMatch = regex.exec(seasonHtml);
-          if (seasonMatch && seasonMatch[1]) {
-            const seasonData = JSON.parse(seasonMatch[1].replace(/&quot;/g, '"'));
-            const seasonEpisodes = seasonData.props?.loadedSeason?.episodes || [];
-            if (seasonEpisodes.length > 0) {
-              hasEpisodes = true;
-              seasonEpisodes.forEach((episode) => {
-                episodes.push({
-                  href: `${CONFIG.BASE}/${CONFIG.LANG}/iframe/${titleId}?episode_id=${episode.id}`,
-                  number: episode.number || episodes.length + 1,
-                });
-              });
-            }
-          }
-        }
-      } catch (error) {
-        // Ignora eventuale errore sulla singola stagione
+    // Episodi stagione 1 (già presenti nel primo fetch)
+    pushEpisodes(pageData.props?.loadedSeason?.episodes);
+
+    // Stagioni S2..Sn a gruppi di SEASON_CONCURRENCY, risultati nell'ordine [S2, S3, ...]
+    if (totalSeasons > 1) {
+      const seasonUrls = [];
+      for (let season = 2; season <= totalSeasons; season++) {
+        seasonUrls.push(`${baseUrl}/season-${season}`);
+      }
+
+      const seasonsData = await mapWithConcurrency(seasonUrls, SEASON_CONCURRENCY, (sUrl) =>
+        getInertiaPageData(sUrl, false)
+      );
+
+      for (const sData of seasonsData) {
+        if (sData) pushEpisodes(sData.props?.loadedSeason?.episodes);
       }
     }
 
@@ -205,11 +242,11 @@ async function extractStreamUrl(url) {
     if (!response1) return null;
     const html1 = await response1.text();
 
-    const iframeMatch = html1.match(/<iframe[^>]*src="([^"]*)"/);
+    const iframeMatch = html1.match(/<iframe[^>]*src=['"]([^'"]+)['"]/i);
     if (!iframeMatch) return null;
 
     // Decodifica entità HTML (&amp; -> &) dall'attributo src
-    const embedUrl = iframeMatch[1].replace(/&amp;/g, "&").replace(/amp;/g, "");
+    const embedUrl = decodeEntities(iframeMatch[1]).replace(/amp;/g, "");
 
     const response2 = await soraFetch(embedUrl, {
       headers: {
@@ -224,15 +261,21 @@ async function extractStreamUrl(url) {
 
     // Estrazione Master Playlist Vixcloud (HLS ABR nativo)
     if (html2.includes("window.masterPlaylist")) {
-      const urlMatch = html2.match(/url:\s*['"]([^'"]+)['"]/);
-      const tokenMatch = html2.match(/['"]?token['"]?\s*:\s*['"]([^'"]+)['"]/);
-      const expiresMatch = html2.match(/['"]?expires['"]?\s*:\s*['"]([^'"]+)['"]/);
+      // Cerca url/token/expires solo da window.masterPlaylist fino alla fine del suo <script>
+      // (Vixcloud non chiude il blocco con "};", quindi non si usa una regex sulle graffe)
+      const blockStart = html2.indexOf("window.masterPlaylist");
+      const blockEnd = html2.indexOf("</script>", blockStart);
+      const targetSource = html2.slice(blockStart, blockEnd === -1 ? undefined : blockEnd);
+
+      const urlMatch = targetSource.match(/url:\s*['"]([^'"]+)['"]/);
+      const tokenMatch = targetSource.match(/['"]?token['"]?\s*:\s*['"]([^'"]+)['"]/);
+      const expiresMatch = targetSource.match(/['"]?expires['"]?\s*:\s*['"]([^'"]+)['"]/);
 
       if (urlMatch && tokenMatch && expiresMatch) {
         const base = urlMatch[1];
         const token = tokenMatch[1];
         const expires = expiresMatch[1];
-        const canPlayFHD = /window\.canPlayFHD\s*=\s*(true|1)/.test(html2);
+        const canPlayFHD = /window\.canPlayFHD\s*=\s*(true|1)/i.test(html2);
 
         const params = { token: token, expires: expires };
         if (canPlayFHD) params.h = 1;
