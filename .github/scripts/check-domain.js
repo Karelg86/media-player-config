@@ -34,7 +34,7 @@ async function probe(url) {
 (async () => {
   const main = JSON.parse(fs.readFileSync(path.join(ROOT, "main.json"), "utf8"));
   const oldDomain = new URL(main.baseUrl).hostname;
-  const target = `https://${oldDomain}/it/`;
+  const target = main.baseUrl;
 
   let result = null;
   let lastError = null;

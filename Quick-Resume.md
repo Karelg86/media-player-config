@@ -45,7 +45,8 @@ Lo stallo della riproduzione video in Shirox era causato da 3 fattori tecnici co
   Gli stream di Vixcloud utilizzano **token HMAC con scadenza temporale (TTL)** (`token=...&expires=...`).
   Quando l'utente torna a guardare il contenuto dopo ore, il token salvato da Shirox è scaduto. Il CDN rifiuta i chunk (.ts/.m4s) con HTTP 403.
   Se invece l'utente cerca il titolo e fa play, Shirox invoca `extractStreamUrl`, che richiede una nuova pagina iframe e genera un token HMAC fresco.
-- **Conclusione:** Questo comportamento è un limite architetturale dell'app iOS (Shirox dovrebbe rieseguire l'estrazione all'avvio della riproduzione dal punto salvato invece di conservare l'URL finale temporaneo). Il modulo JavaScript non può aggirare la scadenza HMAC imposta dal server, ma garantisce che ogni nuova richiesta sia perfettamente funzionante.
+- **Conclusione (originale):** limite dell'app iOS: il modulo non può aggirare la scadenza HMAC imposta dal server, ma garantisce che ogni nuova richiesta sia perfettamente funzionante.
+- **Aggiornamento 14/10/2026 (da verificare sull'iPhone):** nel codice attuale di Shirox (`xibrox/Shirox`, `Views/ContinueWatchingCard.swift` → `onStreamExpired`) quando l'URL salvato non funziona più l'app richiama `extractEpisodes` sulla scheda, ritrova l'episodio tramite `href` (o numero) e chiede un nuovo stream a `extractStreamUrl`. Con una build recente di Shirox il problema dovrebbe essere risolto. Per questo gli `href` degli episodi devono restare **stabili** tra una versione e l'altra del modulo.
 
 ---
 
@@ -110,7 +111,8 @@ media-player-config/
 ├── .github/
 │   ├── workflows/
 │   │   ├── check-domain.yml        # Robot: controlla il dominio ogni 6 ore e AVVISA (issue)
-│   │   └── update-domain.yml       # Robot: cambio dominio su richiesta (anche da cellulare)
+│   │   ├── update-domain.yml       # Robot: cambio dominio su richiesta (anche da cellulare)
+│   │   └── health-check.yml        # Robot: test completo ogni giorno, AVVISA se il modulo non funziona
 │   └── scripts/
 │       ├── check-domain.js         # Logica del controllo
 │       └── update-domain.js        # Logica della sostituzione dominio + versione
@@ -127,6 +129,12 @@ media-player-config/
 - Se una issue di avviso è già aperta non ne apre altre.
 - Lo puoi lanciare a mano: *Actions → Controllo dominio → Run workflow*.
 - ⚠️ GitHub sospende i workflow programmati dopo **60 giorni senza attività** nel repo (manda una email prima). Per riattivarlo: *Actions → Controllo dominio → Enable workflow*.
+
+### 🩺 Salute del modulo (robot giornaliero)
+- Ogni giorno GitHub esegue **Salute modulo**: test offline + test completo sul sito vero (ricerca → episodi → stream).
+- Se fallisce **2 volte di fila** apre una issue con etichetta `salute` (notifica su app GitHub / email): il sito ha probabilmente cambiato la struttura delle pagine e il modulo va aggiornato.
+- Un solo errore isolato non genera avvisi (Cloudflare a volte blocca i server di GitHub).
+- Quando il test torna a funzionare la issue si chiude da sola. Lancio manuale: *Actions → Salute modulo → Run workflow*.
 
 ### 📱 Cambio dominio da cellulare (metodo consigliato)
 1. Apri il link scritto nella issue, oppure dal browser: `https://github.com/Karelg86/media-player-config/actions/workflows/update-domain.yml`  
