@@ -1,6 +1,6 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.6
+ * Versione: 1.0.7
  *
  * Novità v1.0.6:
  * - Cache in RAM (TTL 15s) condivisa tra extractDetails ed extractEpisodes:
@@ -11,8 +11,8 @@
  */
 
 const CONFIG = {
-  BASE: "https://streamingcommunityz.shiksha",
-  CDN: "https://cdn.streamingcommunityz.shiksha/images/",
+  BASE: "https://streamingcommunityz.build",
+  CDN: "https://cdn.streamingcommunityz.build/images/",
   LANG: "it",
 };
 
