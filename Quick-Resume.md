@@ -1,9 +1,9 @@
 # QUICK-RESUME: Modulo Shirox / Sora — StreamingCommunity IT
 
 > **Documento di ripristino contesto e guida operativa**  
-> **Versione modulo:** 1.0.7  
-> **Ultimo aggiornamento:** 14 Ottobre 2026  
-> **Target:** iOS Media Player **Shirox v1.0.6 (Build 117)** (compatibile anche con Sora / Luna / Mojuru)  
+> **Versione modulo:** 1.0.8  
+> **Ultimo aggiornamento:** 25 Ottobre 2026  
+> **Target:** iOS Media Player **Shirox v1.0.6 (Build 123)** (compatibile anche con Sora / Luna / Mojuru)  
 > **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)  
 > **Percorso locale PC Casa:** `d:\Sora_Sulfur\Stream_Git\` (o cartella clone del repo)
 
@@ -89,6 +89,21 @@ Lo stallo della riproduzione video in Shirox era causato da 3 fattori tecnici co
 4. **Apostrofi:** `decodeEntities` riconosce `&#39;`, `&#039;`, `&#x27;`, `&apos;` (titoli tipo "L'esorcista" ora corretti).
 5. **Iframe:** `src` accettato con apici singoli o doppi.
 6. **Icona autore:** ora `https://github.com/Karelg86.png` (stabile).
+
+---
+
+### F2. Novità v1.0.8 (25 Ottobre 2026)
+1. **Retry su rete debole / sito sovraccarico:** `soraFetch` ritenta fino a **3 volte** (pausa 1 s, poi 2 s) se la rete fallisce o il server risponde `5xx`, `429` o `408`, entro ~50 s (Shirox concede 120 s a ogni funzione del modulo). Gli altri errori (`403`, `404`) non vengono ritentati. Prima un solo errore arrivava a Shirox come stream vuoto. Stesso schema già usato nei moduli manga (Mang_ITA / Mang_ENG).
+   - Test mock: 503 poi ok, errore di rete poi ok, 404 non ritentato, massimo 3 tentativi.
+
+### F3. Problema noto: episodi lenti o bloccati in AirPlay (verificato 25/10/2026)
+- Vixcloud serve i segmenti video da due tipi di server, scelti **da Vixcloud per ogni episodio** (la scelta cambia nel tempo):
+  - `sc-uXX-01.<nome>.boats` → dietro Cloudflare, veloce (70–145 Mbit/s);
+  - `sc-uXX-01.vix-content.net` → server diretto (`nginx`), **lento** (1–24 Mbit/s) e con raffiche di errori `503`. Il 1080p richiede ~4,5 Mbit/s continui.
+- Con AirPlay è la **TV** a scaricare il video (il modulo restituisce un URL senza header, quindi Shirox non usa il proxy). Sul server lento la TV si blocca; Shirox registra `Loading timeout reached`, poi `[StreamExpiry] failedToPlayToEndTime`, poi `[StallRecovery] ... resume at 0.0s`.
+- Il modulo **non può** scegliere il server: `Server1` (`?ub=1`) e `Server2` (`?ab=1`) danno lo stesso dominio, e togliere `h=1` dall'URL dà `403` (il token lo include).
+- Rimedio: per gli episodi che si bloccano usare **Duplica schermo** invece di AirPlay (scarica il telefono, che regge meglio).
+- Per capire da quale server arriva un episodio: scaricare la playlist 1080p del master e guardare il dominio dei segmenti.
 
 ---
 

@@ -174,6 +174,43 @@ async function runMock() {
   const stream = await ex.extractStreamUrl(`${MOCK_BASE}/iframe/42?episode_id=101`);
   check("stream: URL dal blocco masterPlaylist (non dallo script esterno)",
     stream === "https://vixcloud.co/playlist/999?b=1&token=TOKEN123&expires=1999999999&h=1", stream || "null");
+
+  // Retry: errori temporanei del server/rete prima della risposta buona
+  const flaky = (failures) => {
+    const calls = {};
+    const base = makeMockFetch({ requests: [], inFlight: 0, maxInFlight: 0 });
+    const fetchImpl = async (url, options) => {
+      calls[url] = (calls[url] || 0) + 1;
+      const failure = failures[calls[url] - 1];
+      if (failure === "rete") throw new Error("network down");
+      if (failure) return { status: failure, text: async () => "" };
+      return base(url, options);
+    };
+    return { calls, fetchImpl };
+  };
+  const streamUrl = `${MOCK_BASE}/iframe/42?episode_id=101`;
+  const expected = "https://vixcloud.co/playlist/999?b=1&token=TOKEN123&expires=1999999999&h=1";
+
+  let f = flaky([503]);
+  ex = loadExtractor(f.fetchImpl);
+  check("retry: 503 poi ok -> stream", (await ex.extractStreamUrl(streamUrl)) === expected,
+    `richieste iframe: ${f.calls[`${MOCK_BASE}/it/iframe/42?episode_id=101`]}`);
+
+  f = flaky(["rete"]);
+  ex = loadExtractor(f.fetchImpl);
+  check("retry: errore di rete poi ok -> stream", (await ex.extractStreamUrl(streamUrl)) === expected);
+
+  f = flaky([404]);
+  ex = loadExtractor(f.fetchImpl);
+  await ex.extractStreamUrl(streamUrl);
+  const tries404 = f.calls[`${MOCK_BASE}/it/iframe/42?episode_id=101`];
+  check("retry: 404 non ritentato", tries404 === 1, `${tries404} richieste`);
+
+  f = flaky([503, 503, 503, 503]);
+  ex = loadExtractor(f.fetchImpl);
+  const dead = await ex.extractStreamUrl(streamUrl);
+  const tries503 = f.calls[`${MOCK_BASE}/it/iframe/42?episode_id=101`];
+  check("retry: max 3 tentativi poi null", dead === null && tries503 === 3, `${tries503} richieste`);
 }
 
 // ==========================================

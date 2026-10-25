@@ -1,6 +1,10 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.7
+ * Versione: 1.0.8
+ *
+ * Novità v1.0.8:
+ * - soraFetch ritenta fino a 3 volte (pausa 1 s, 2 s) se la rete fallisce o il server
+ *   risponde 5xx/429/408, entro ~50 s (Shirox concede 120 s a ogni funzione del modulo)
  *
  * Novità v1.0.6:
  * - Cache in RAM (TTL 15s) condivisa tra extractDetails ed extractEpisodes:
@@ -70,7 +74,30 @@ async function mapWithConcurrency(items, limit, fn) {
 }
 
 // --- FETCH ENGINE COMPATIBILE SHIROX / SORA ---
+// Rete debole o sito sovraccarico: una richiesta fallita o con errore del server viene ritentata,
+// invece di arrivare a Shirox come stream/lista vuota al primo errore.
+// Il limite di tempo resta sotto i 120 s che Shirox concede a ogni funzione del modulo.
+const FETCH_ATTEMPTS = 3;
+const FETCH_TIME_BUDGET_MS = 50000;
+
 async function soraFetch(url, options = { headers: {}, method: "GET", body: null }) {
+  const started = Date.now();
+  let res = null;
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+    res = await soraFetchOnce(url, options);
+    if (res && !(res.status >= 500 || res.status === 429 || res.status === 408)) return res;
+    if (attempt === FETCH_ATTEMPTS || Date.now() - started > FETCH_TIME_BUDGET_MS) break;
+    console.log(`[soraFetch] tentativo ${attempt} fallito (${res ? res.status : "rete"}), riprovo: ${url}`);
+    await sleep(1000 * attempt);
+  }
+  return res;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function soraFetchOnce(url, options) {
   try {
     return await fetchv2(url, options.headers ?? {}, options.method ?? "GET", options.body ?? null);
   } catch (e) {
