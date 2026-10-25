@@ -102,8 +102,24 @@ Lo stallo della riproduzione video in Shirox era causato da 3 fattori tecnici co
   - `sc-uXX-01.vix-content.net` → server diretto (`nginx`), **lento** (1–24 Mbit/s) e con raffiche di errori `503`. Il 1080p richiede ~4,5 Mbit/s continui.
 - Con AirPlay è la **TV** a scaricare il video (il modulo restituisce un URL senza header, quindi Shirox non usa il proxy). Sul server lento la TV si blocca; Shirox registra `Loading timeout reached`, poi `[StreamExpiry] failedToPlayToEndTime`, poi `[StallRecovery] ... resume at 0.0s`.
 - Il modulo **non può** scegliere il server: `Server1` (`?ub=1`) e `Server2` (`?ab=1`) danno lo stesso dominio, e togliere `h=1` dall'URL dà `403` (il token lo include).
-- Rimedio: per gli episodi che si bloccano usare **Duplica schermo** invece di AirPlay (scarica il telefono, che regge meglio).
+- Rimedi per l'utente:
+  1. **Qualità 720p:** Shirox → Impostazioni → Playback Quality → Preferred Quality → `720p` (oppure menu qualità nel player). Il 720p chiede ~1,8 Mbit/s invece di 4,5. Secondo il codice di Shirox (`PlayerView.applyPreferredQuality` → `preferredPeakBitRate`) vale anche in AirPlay; da confermare sulla TV.
+  2. **Duplica schermo** invece di AirPlay: il video lo scarica il telefono, che regge meglio.
 - Per capire da quale server arriva un episodio: scaricare la playlist 1080p del master e guardare il dominio dei segmenti.
+- Idee scartate lato modulo: forzare il proxy di Shirox (`CastProxyServer`) restituendo degli header non serve, perché il proxy passa i dati man mano senza caricare in anticipo, quindi il server resta lento uguale. Anche restituire una sola variante (es. 720p) non va bene, perché si perderebbero le tracce audio e i sottotitoli separati.
+
+### F4. Segnalazione allo sviluppatore di Shirox (25/10/2026)
+Problemi di Shirox v1.0.6 (123) verificati nel sorgente (`xibrox/Shirox`):
+1. Dopo un blocco `[StallRecovery]` riparte da `0.0s` e perde la posizione salvata.
+2. Se il player nativo fallisce, l'app passa a MPV anche con AirPlay attivo, e MPV manda alla TV solo l'audio.
+3. L'errore è generico (`The operation could not be completed`): mancano i dettagli di `AVPlayerItem.errorLog()` (URI, stato HTTP).
+4. Dopo 10 s `Loading timeout reached, forcing ready state` (`PlayerView.swift`): la TV resta nera mentre lo stream sta ancora caricando.
+
+Proposte inviate: in AirPlay abbassare la qualità prima di ricaricare lo stream, aspettare di più prima del timeout e del passaggio a MPV, non passare a MPV con AirPlay attivo (o mostrare un avviso).
+
+- Dove segnalare: Discord di Shirox `https://discord.com/invite/b9tZSuJj73` (canale bug/supporto, limite 2000 caratteri per messaggio) oppure una issue su GitHub `xibrox/Shirox`. Allegare i log: Impostazioni → Logs → ⋯ → Copy to Clipboard.
+- Il testo completo del messaggio (inglese e italiano) è nella conversazione salvata `workflow/conversations/2026-10-25_*airplay*`.
+- Stato: messaggio preparato, invio a cura dell'utente. Da segnare qui la risposta dello sviluppatore.
 
 ---
 
