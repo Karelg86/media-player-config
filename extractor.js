@@ -1,6 +1,6 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.8
+ * Versione: 1.0.9
  *
  * Novità v1.0.8:
  * - soraFetch ritenta fino a 3 volte (pausa 1 s, 2 s) se la rete fallisce o il server
@@ -15,8 +15,8 @@
  */
 
 const CONFIG = {
-  BASE: "https://streamingcommunityz.build",
-  CDN: "https://cdn.streamingcommunityz.build/images/",
+  BASE: "https://streamingcommunityz.day",
+  CDN: "https://cdn.streamingcommunityz.day/images/",
   LANG: "it",
 };
 
