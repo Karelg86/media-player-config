@@ -5,7 +5,7 @@
  * Uso locale: node .github/scripts/check-domain.js
  *
  * Output (in GITHUB_OUTPUT se presente, altrimenti a schermo):
- *   alert=true|false   old_domain=...   new_domain=...   reason=...
+ *   alert=true|false   ok=true (solo se il dominio risponde senza cambi)   old_domain=...   new_domain=...   reason=...
  */
 
 const fs = require("fs");
@@ -85,8 +85,9 @@ async function probe(url) {
     }
   }
 
-  // 200, 403/503 di Cloudflare, redirect interni: il sito è vivo, nessun avviso
-  setOutput({ alert: false, old_domain: oldDomain, new_domain: "", reason: `HTTP ${result.status}, nessun cambio rilevato.` });
+  // 200, 403/503 di Cloudflare, redirect interni: il sito è vivo, nessun avviso.
+  // ok=true: il dominio di main.json funziona, quindi un avviso rimasto aperto si può chiudere
+  setOutput({ alert: false, ok: true, old_domain: oldDomain, new_domain: "", reason: `HTTP ${result.status}, nessun cambio rilevato.` });
 })().catch((error) => {
   console.error(error);
   process.exit(1);

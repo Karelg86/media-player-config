@@ -158,6 +158,7 @@ media-player-config/
 - Ogni 6 ore GitHub esegue **Controllo dominio**. Non modifica nulla.
 - Se il dominio reindirizza altrove **o non risponde più**, apre una **issue** con etichetta `dominio`, assegnata a te → arriva notifica sull'app GitHub / email.
 - Se una issue di avviso è già aperta non ne apre altre.
+- Quando il dominio di `main.json` risponde di nuovo senza cambi (es. dominio aggiornato dal PC con push), chiude da solo le issue `dominio` rimaste aperte.
 - Lo puoi lanciare a mano: *Actions → Controllo dominio → Run workflow*.
 - ⚠️ GitHub sospende i workflow programmati dopo **60 giorni senza attività** nel repo (manda una email prima). Per riattivarlo: *Actions → Controllo dominio → Enable workflow*.
 
