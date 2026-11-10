@@ -1,11 +1,10 @@
 # QUICK-RESUME: Modulo Shirox / Sora — StreamingCommunity IT
 
 > **Documento di ripristino contesto e guida operativa**  
-> **Versione modulo:** 1.0.11  
+> **Versione modulo:** 1.0.12  
 > **Ultimo aggiornamento:** 10 Novembre 2026  
 > **Target:** iOS Media Player **Shirox v1.0.6 (Build 126)** — build 126 (5/11/2026) controllata nel sorgente: nessun cambio per i moduli (compatibile anche con Sora / Luna / Mojuru)  
-> **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)  
-> **Percorso locale PC Casa:** `d:\Sora_Sulfur\Stream_Git\` (o cartella clone del repo)
+> **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)
 
 ---
 
@@ -95,6 +94,11 @@ Lo stallo della riproduzione video in Shirox era causato da 3 fattori tecnici co
 ### F2. Novità v1.0.8 (25 Ottobre 2026)
 1. **Retry su rete debole / sito sovraccarico:** `soraFetch` ritenta fino a **3 volte** (pausa 1 s, poi 2 s) se la rete fallisce o il server risponde `5xx`, `429` o `408`, entro ~50 s (Shirox concede 120 s a ogni funzione del modulo). Gli altri errori (`403`, `404`) non vengono ritentati. Prima un solo errore arrivava a Shirox come stream vuoto. Stesso schema già usato nei moduli manga (Mang_ITA / Mang_ENG).
    - Test mock: 503 poi ok, errore di rete poi ok, 404 non ritentato, massimo 3 tentativi.
+
+### F2b. Novità v1.0.12 (10 Novembre 2026)
+1. **Secondo giro per le stagioni mancanti:** se una stagione S2..Sn non arriva al primo giro (es. pagina senza dati per un blocco temporaneo dovuto alle richieste in parallelo), `extractEpisodes` la richiede di nuovo, **una alla volta**, prima di saltarla. Una stagione saltata sposta la numerazione delle successive in Shirox (la 3 appare come 2). Se manca anche al secondo giro viene saltata come prima, con una riga nei log: `[Episodi] stagione non scaricata, saltata: <url>`.
+   - Test mock: stagione recuperata al secondo giro con ordine S1..Sn invariato; stagione che non arriva mai → 2 richieste in tutto, le altre restano. Test live 10/11/2026: Breaking Bad [7, 13, 13, 13, 16].
+   - Backup pre-modifica: `backup/v1.0.11/` (solo sul PC).
 
 ### F3. Problema noto: episodi lenti o bloccati in AirPlay (verificato 25/10/2026)
 - Vixcloud serve i segmenti video da due tipi di server, scelti **da Vixcloud per ogni episodio** (la scelta cambia nel tempo):
@@ -196,7 +200,7 @@ git push origin main
 ## 4. TEST LOCALE
 
 ```bash
-node test-module.js --mock            # offline: verifica apostrofi, cache, ordine stagioni, max 3 in parallelo, estrazione stream
+node test-module.js --mock            # offline: verifica apostrofi, cache, ordine stagioni, max 3 in parallelo, estrazione stream, retry, stagioni mancanti
 node test-module.js "interstellar"    # live: film
 node test-module.js "breaking bad"    # live: serie TV (mostra anche come Shirox vedrà le stagioni)
 ```

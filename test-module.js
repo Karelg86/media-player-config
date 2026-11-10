@@ -211,6 +211,29 @@ async function runMock() {
   const dead = await ex.extractStreamUrl(streamUrl);
   const tries503 = f.calls[`${MOCK_BASE}/it/iframe/42?episode_id=101`];
   check("retry: max 3 tentativi poi null", dead === null && tries503 === 3, `${tries503} richieste`);
+
+  // Stagione che non arriva al primo giro (pagina senza dati, es. blocco temporaneo): secondo giro
+  const blockedSeason = (timesBlocked) => {
+    const calls = {};
+    const base = makeMockFetch({ requests: [], inFlight: 0, maxInFlight: 0 });
+    const fetchImpl = async (url, options) => {
+      calls[url] = (calls[url] || 0) + 1;
+      if (url.endsWith("/season-3") && calls[url] <= timesBlocked) return { status: 200, text: async () => "<html>blocco</html>" };
+      return base(url, options);
+    };
+    return { calls, fetchImpl };
+  };
+  const season3 = `${href}/season-3`;
+
+  f = blockedSeason(1);
+  let seasonIds = JSON.parse(await loadExtractor(f.fetchImpl).extractEpisodes(href)).map((e) => Number(e.href.split("episode_id=")[1]));
+  check("stagioni: stagione saltata al primo giro recuperata al secondo, ordine S1..Sn",
+    JSON.stringify(seasonIds) === JSON.stringify(expectedIds) && f.calls[season3] === 2, `${seasonIds.length}/${expectedTotal}, richieste season-3: ${f.calls[season3]}`);
+
+  f = blockedSeason(99);
+  seasonIds = JSON.parse(await loadExtractor(f.fetchImpl).extractEpisodes(href)).map((e) => Number(e.href.split("episode_id=")[1]));
+  check("stagioni: stagione che non arriva mai -> saltata, le altre restano (2 richieste in tutto)",
+    seasonIds.length === expectedTotal - MOCK_EPISODES_PER_SEASON && f.calls[season3] === 2, `${seasonIds.length} episodi, richieste season-3: ${f.calls[season3]}`);
 }
 
 // ==========================================

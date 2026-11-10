@@ -1,6 +1,10 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.11
+ * Versione: 1.0.12
+ *
+ * Novità v1.0.12:
+ * - Le stagioni che non si scaricano al primo giro vengono richieste di nuovo, una alla volta,
+ *   prima di essere saltate (una stagione mancante sposta la numerazione delle successive in Shirox)
  *
  * Novità v1.0.8:
  * - soraFetch ritenta fino a 3 volte (pausa 1 s, 2 s) se la rete fallisce o il server
@@ -232,6 +236,18 @@ async function extractEpisodes(url) {
       const seasonsData = await mapWithConcurrency(seasonUrls, SEASON_CONCURRENCY, (sUrl) =>
         getInertiaPageData(sUrl, false)
       );
+
+      // Secondo giro, una alla volta, per le stagioni non arrivate (es. blocco temporaneo
+      // per troppe richieste insieme). Se manca ancora, la stagione viene saltata come prima.
+      for (let i = 0; i < seasonsData.length; i++) {
+        if (seasonsData[i]) continue;
+        try {
+          seasonsData[i] = await getInertiaPageData(seasonUrls[i], false);
+        } catch (error) {
+          seasonsData[i] = null;
+        }
+        if (!seasonsData[i]) console.log(`[Episodi] stagione non scaricata, saltata: ${seasonUrls[i]}`);
+      }
 
       for (const sData of seasonsData) {
         if (sData) pushEpisodes(sData.props?.loadedSeason?.episodes);
