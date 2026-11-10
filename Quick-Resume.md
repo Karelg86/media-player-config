@@ -2,8 +2,8 @@
 
 > **Documento di ripristino contesto e guida operativa**  
 > **Versione modulo:** 1.0.11  
-> **Ultimo aggiornamento:** 25 Ottobre 2026  
-> **Target:** iOS Media Player **Shirox v1.0.6 (Build 123)** (compatibile anche con Sora / Luna / Mojuru)  
+> **Ultimo aggiornamento:** 10 Novembre 2026  
+> **Target:** iOS Media Player **Shirox v1.0.6 (Build 126)** — build 126 (5/11/2026) controllata nel sorgente: nessun cambio per i moduli (compatibile anche con Sora / Luna / Mojuru)  
 > **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)  
 > **Percorso locale PC Casa:** `d:\Sora_Sulfur\Stream_Git\` (o cartella clone del repo)
 
