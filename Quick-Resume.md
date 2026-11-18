@@ -2,7 +2,7 @@
 
 > **Documento di ripristino contesto e guida operativa**  
 > **Versione modulo:** 1.0.13  
-> **Ultimo aggiornamento:** 10 Novembre 2026  
+> **Ultimo aggiornamento:** 18 Novembre 2026  
 > **Target:** iOS Media Player **Shirox v1.0.6 (Build 126)** — build 126 (5/11/2026) controllata nel sorgente: nessun cambio per i moduli (compatibile anche con Sora / Luna / Mojuru)  
 > **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)
 
