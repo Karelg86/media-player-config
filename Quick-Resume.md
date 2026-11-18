@@ -1,7 +1,7 @@
 # QUICK-RESUME: Modulo Shirox / Sora — StreamingCommunity IT
 
 > **Documento di ripristino contesto e guida operativa**  
-> **Versione modulo:** 1.0.12  
+> **Versione modulo:** 1.0.13  
 > **Ultimo aggiornamento:** 10 Novembre 2026  
 > **Target:** iOS Media Player **Shirox v1.0.6 (Build 126)** — build 126 (5/11/2026) controllata nel sorgente: nessun cambio per i moduli (compatibile anche con Sora / Luna / Mojuru)  
 > **Repository GitHub:** [Karelg86/media-player-config](https://github.com/Karelg86/media-player-config)
@@ -12,8 +12,8 @@
 
 ### A. Dominio Attivo e CDN
 - I vecchi domini `.promo` e `.rip` sono dismessi (il `.rip` ormai non risponde più, nemmeno con redirect).
-- **Nuovo dominio attivo:** `https://streamingcommunityz.nexus`
-- **CDN locandine attivo:** `https://cdn.streamingcommunityz.nexus/images/`
+- **Nuovo dominio attivo:** `https://streamingcommunityz.dad`
+- **CDN locandine attivo:** `https://cdn.streamingcommunityz.dad/images/`
 - Il controllo del dominio è automatico: vedi sezione 3.
 
 ---

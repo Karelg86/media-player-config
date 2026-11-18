@@ -1,6 +1,6 @@
 /**
  * Shirox / Sora / Luna Module Extractor - StreamingCommunity IT
- * Versione: 1.0.12
+ * Versione: 1.0.13
  *
  * Novità v1.0.12:
  * - Le stagioni che non si scaricano al primo giro vengono richieste di nuovo, una alla volta,
@@ -19,8 +19,8 @@
  */
 
 const CONFIG = {
-  BASE: "https://streamingcommunityz.nexus",
-  CDN: "https://cdn.streamingcommunityz.nexus/images/",
+  BASE: "https://streamingcommunityz.dad",
+  CDN: "https://cdn.streamingcommunityz.dad/images/",
   LANG: "it",
 };
 
